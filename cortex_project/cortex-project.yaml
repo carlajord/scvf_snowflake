@@ -1,0 +1,7 @@
+version: 1
+artifacts:
+  - path: WELL_INTEGRITY_SV.sv.yaml
+    type: semantic_view
+    targets:
+      default:
+        object: WELL_INTEGRITY.GOLD.WELL_INTEGRITY_SV
