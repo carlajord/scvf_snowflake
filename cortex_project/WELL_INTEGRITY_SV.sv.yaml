@@ -1,0 +1,208 @@
+name: WELL_INTEGRITY_SV
+description: Well integrity analytics for BC Energy Regulator data. Covers well risk
+  scores, SCVF (Surface Casing Vent Flow) test results, casing condition, and operator
+  performance. Use this to answer questions about well safety, risk distribution,
+  SCVF severity, H2S presence, and casing age.
+tables:
+  - name: WELLS_GOLD
+    base_table:
+      database: WELL_INTEGRITY
+      schema: GOLD
+      table: WELLS_GOLD
+    dimensions:
+      - name: WA_NUM
+        expr: WA_NUM
+        data_type: NUMBER
+      - name: WELL_NAME
+        expr: WELL_NAME
+        data_type: VARCHAR
+      - name: OPERATOR_NAME
+        expr: OPERATOR_NAME
+        data_type: VARCHAR
+      - name: OPER_ABBREV
+        expr: OPER_ABBREV
+        data_type: VARCHAR
+      - name: WELL_MODE
+        expr: WELL_MODE
+        data_type: VARCHAR
+      - name: WELL_FLUID
+        expr: WELL_FLUID
+        data_type: VARCHAR
+      - name: WELL_CLASS
+        expr: WELL_CLASS
+        data_type: VARCHAR
+      - name: LATEST_SCVF_SEVERITY
+        expr: LATEST_SCVF_SEVERITY
+        data_type: VARCHAR
+      - name: LATEST_H2S_PRESENT
+        expr: LATEST_H2S_PRESENT
+        data_type: VARCHAR
+      - name: LATEST_IS_SERIOUS_SCVF
+        expr: LATEST_IS_SERIOUS_SCVF
+        data_type: BOOLEAN
+      - name: TOTAL_SCVF_TESTS
+        expr: TOTAL_SCVF_TESTS
+        data_type: NUMBER
+      - name: EVER_SERIOUS_SCVF
+        expr: EVER_SERIOUS_SCVF
+        data_type: NUMBER
+      - name: EVER_H2S_PRESENT
+        expr: EVER_H2S_PRESENT
+        data_type: NUMBER
+      - name: OLDEST_CASING_AGE_YEARS
+        expr: OLDEST_CASING_AGE_YEARS
+        data_type: NUMBER
+      - name: SURFACE_CASING_POOR_CEMENT
+        expr: SURFACE_CASING_POOR_CEMENT
+        data_type: NUMBER
+      - name: RISK_SCORE
+        expr: RISK_SCORE
+        data_type: NUMBER
+      - name: RISK_TIER
+        expr: RISK_TIER
+        data_type: VARCHAR
+    time_dimensions:
+      - name: RIG_RELEASE_DATE
+        expr: RIG_RELEASE_DATE
+        data_type: DATE
+      - name: LATEST_SCVF_TEST_DATE
+        expr: LATEST_SCVF_TEST_DATE
+        data_type: DATE
+    facts:
+      - name: LATITUDE
+        expr: LATITUDE
+        data_type: FLOAT
+      - name: LONGITUDE
+        expr: LONGITUDE
+        data_type: FLOAT
+      - name: LATEST_GAS_FLOW_RATE_M3D
+        expr: LATEST_GAS_FLOW_RATE_M3D
+        data_type: FLOAT
+  - name: LATEST_SCVF_PER_WELL
+    base_table:
+      database: WELL_INTEGRITY
+      schema: GOLD
+      table: LATEST_SCVF_PER_WELL
+    dimensions:
+      - name: WA_NUM
+        expr: WA_NUM
+        data_type: NUMBER
+      - name: MODE_CODE
+        expr: MODE_CODE
+        data_type: VARCHAR
+      - name: OPERATIONS_TYPE
+        expr: OPERATIONS_TYPE
+        data_type: VARCHAR
+      - name: SEVERITY
+        expr: SEVERITY
+        data_type: VARCHAR
+      - name: FLOW_SUBSTANCE
+        expr: FLOW_SUBSTANCE
+        data_type: VARCHAR
+      - name: H2S_PRESENT
+        expr: H2S_PRESENT
+        data_type: VARCHAR
+      - name: TEST_TYPE
+        expr: TEST_TYPE
+        data_type: VARCHAR
+      - name: IS_SERIOUS_SCVF
+        expr: IS_SERIOUS_SCVF
+        data_type: BOOLEAN
+    time_dimensions:
+      - name: TEST_DATE
+        expr: TEST_DATE
+        data_type: DATE
+    facts:
+      - name: BUILDUP_PRESSURE_KPA
+        expr: BUILDUP_PRESSURE_KPA
+        data_type: FLOAT
+      - name: GAS_FLOW_RATE_M3D
+        expr: GAS_FLOW_RATE_M3D
+        data_type: FLOAT
+      - name: LIQUID_FLOW_RATE_M3D
+        expr: LIQUID_FLOW_RATE_M3D
+        data_type: FLOAT
+      - name: H2S_PPM
+        expr: H2S_PPM
+        data_type: FLOAT
+    unique_keys:
+      - columns:
+          - WA_NUM
+  - name: SCVF_HISTORY_SUMMARY
+    base_table:
+      database: WELL_INTEGRITY
+      schema: GOLD
+      table: SCVF_HISTORY_SUMMARY
+    dimensions:
+      - name: WA_NUM
+        expr: WA_NUM
+        data_type: NUMBER
+      - name: TOTAL_SCVF_TESTS
+        expr: TOTAL_SCVF_TESTS
+        data_type: NUMBER
+      - name: EVER_SERIOUS_SCVF
+        expr: EVER_SERIOUS_SCVF
+        data_type: NUMBER
+      - name: EVER_H2S_PRESENT
+        expr: EVER_H2S_PRESENT
+        data_type: NUMBER
+    unique_keys:
+      - columns:
+          - WA_NUM
+  - name: CASING_SUMMARY_PER_WELL
+    base_table:
+      database: WELL_INTEGRITY
+      schema: GOLD
+      table: CASING_SUMMARY_PER_WELL
+    dimensions:
+      - name: WA_NUM
+        expr: WA_NUM
+        data_type: NUMBER
+      - name: OLDEST_CASING_AGE_YEARS
+        expr: OLDEST_CASING_AGE_YEARS
+        data_type: NUMBER
+      - name: SURFACE_CASING_POOR_CEMENT
+        expr: SURFACE_CASING_POOR_CEMENT
+        data_type: NUMBER
+      - name: MIN_CASING_GRADE_CODE
+        expr: MIN_CASING_GRADE_CODE
+        data_type: VARCHAR
+    unique_keys:
+      - columns:
+          - WA_NUM
+verified_queries:
+  - name: 0;1
+    question: How many wells are in each risk tier?
+    sql: SELECT RISK_TIER, COUNT(*) AS well_count FROM wells_gold GROUP BY RISK_TIER
+    verified_at: 1787883299
+    verified_by: Semantic Model Generator
+  - name: 1;1
+    question: Which operators have the most high risk wells?
+    sql: SELECT OPERATOR_NAME, COUNT(*) AS high_risk_count FROM wells_gold WHERE RISK_TIER
+      = 'High' GROUP BY OPERATOR_NAME ORDER BY high_risk_count DESC LIMIT 10
+    verified_at: 1787883299
+    verified_by: Semantic Model Generator
+  - name: 2;1
+    question: What is the average age of the oldest casing by risk tier?
+    sql: SELECT RISK_TIER, AVG(OLDEST_CASING_AGE_YEARS) AS avg_casing_age FROM wells_gold
+      GROUP BY RISK_TIER ORDER BY avg_casing_age DESC
+    verified_at: 1787883299
+    verified_by: Semantic Model Generator
+  - name: 3;1
+    question: How many wells have ever had a serious SCVF?
+    sql: SELECT COUNT(*) AS serious_scvf_count FROM wells_gold WHERE EVER_SERIOUS_SCVF
+      = 1
+    verified_at: 1787883299
+    verified_by: Semantic Model Generator
+  - name: 4;1
+    question: What is the average risk score by well mode?
+    sql: SELECT WELL_MODE, COUNT(*) AS well_count, AVG(RISK_SCORE) AS avg_risk_score
+      FROM wells_gold GROUP BY WELL_MODE ORDER BY avg_risk_score DESC
+    verified_at: 1787883299
+    verified_by: Semantic Model Generator
+  - name: 5;1
+    question: Which operators have the most wells with H2S present?
+    sql: SELECT OPERATOR_NAME, COUNT(*) AS well_count FROM wells_gold WHERE EVER_H2S_PRESENT
+      = 1 GROUP BY OPERATOR_NAME ORDER BY well_count DESC LIMIT 10
+    verified_at: 1787883299
+    verified_by: Semantic Model Generator
